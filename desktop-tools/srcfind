@@ -1,0 +1,108 @@
+#!/bin/zsh
+
+# faceted search
+
+if [ $# -eq 0 ]
+then
+	echo >&2 "$0: at least one argument required"
+	exit 1
+fi
+
+# find flags to egrep at end of argument list
+i=1
+flag_index=0
+while (( $i <= $# ))
+do
+	if [[ ${@[$i]} == -* ]]
+	then
+		flag_index=$i
+		break
+	fi
+	i=$((i+1))
+done
+
+declare -a egrep_options patterns
+if [[ $flag_index > 0 ]]
+then
+	if [[ $flag_index == 1 ]]
+	then
+		echo >&2 "$0: at least one argument required before flags to egrep"
+		exit 1
+	fi
+	if [[ $flag_index != $# || ${@[$#]} != "-" ]]
+	then
+		# if user put just a "-" at end of patterns
+		# just skip it from egrep options but show matches
+		egrep_options=(${@[$flag_index,-1]})
+	fi
+	patterns=(${@[1,(($flag_index-1))]})
+fi
+
+function join_by()
+{
+	delim=$1
+	shift
+	arr=($*)
+	result=$(IFS=$delim; echo "${arr[*]}")
+	echo "$result"
+	return 0
+}
+
+
+# Since egrep -l will produce a string of newline-delimited
+# file names, we restrict the input separator to *only*
+# a newline. With this setting + $(echo ...), we make a file 
+# list that is usable by egrep and any spaces in the file names
+# are preserved and processed correctly.
+
+IFS=$'\n'
+
+# get list of files from find
+files=$(
+	find . \
+		-type d -name node_modules -prune \
+		-o \
+		-type f \
+		-print0 |
+	xargs -0 \
+		egrep \
+			$egrep_options \
+			--binary-files=without-match \
+			--files-with-matches \
+			"$1"
+)
+
+# Now iterate per pattern
+for ((i = 2; i <= $#; i++))
+do
+		if (( $i == $flag_index ))
+		then
+			break
+		fi
+		pat="${@[$i]}"
+		
+		files=$(egrep \
+			$egrep_options \
+			--files-with-matches \
+			"$pat" \
+			$(echo $files))
+
+		if [ $? -ne 0 ]
+		then
+			# egrep returned nothing - no results
+			exit 1
+		fi
+done
+
+if [[ $flag_index > 0 ]]
+then
+	expression=$(join_by '|' $patterns)
+	egrep \
+		-H \
+		$egrep_options \
+		"$expression" \
+		$files
+else
+	echo $files
+fi
+exit 0
