@@ -64,10 +64,7 @@ files=$(
 		-type d \( \
 			-name node_modules \
 			-o -name dist \
-			-o \( \
-				-name '.*' \
-				! -name . \
-			\) \
+			-o -name '.?*' \
 		\) \
 		-prune \
 		-o \
