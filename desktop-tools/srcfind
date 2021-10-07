@@ -58,11 +58,26 @@ function join_by()
 IFS=$'\n'
 
 # get list of files from find
+# filtering out useless stuff that would appear in a Node/TS project.
 files=$(
 	find . \
-		-type d -name node_modules -prune \
+		-type d \( \
+			-name node_modules \
+			-o -name dist \
+			-o \( \
+				-name '.*' \
+				! -name . \
+			\) \
+		\) \
+		-prune \
 		-o \
-		-type f \
+		\( \
+			-type f \
+			! -name '.*' \
+			! -name 'package-lock.json' \
+			! -name 'yarn.lock' \
+			! -name '*.log' \
+		\) \
 		-print0 |
 	xargs -0 \
 		egrep \
@@ -71,6 +86,12 @@ files=$(
 			--files-with-matches \
 			"$1"
 )
+
+if [ $? -ne 0 ]
+then
+	# egrep returned nothing - no results
+	exit 1
+fi
 
 # Now iterate per pattern
 for ((i = 2; i <= $#; i++))
