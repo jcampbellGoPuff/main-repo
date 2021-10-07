@@ -101,7 +101,7 @@ then
 		-H \
 		$egrep_options \
 		"$expression" \
-		$files
+		$(echo $files)
 else
 	echo $files
 fi
