@@ -29,7 +29,7 @@ then
 		echo >&2 "$0: at least one argument required before flags to egrep"
 		exit 1
 	fi
-	if [[ $flag_index != $# || ${@[$#]} != "-" ]]
+	if [[ $flag_index != $# || ${@[$#]} != "--" ]]
 	then
 		# if user put just a "-" at end of patterns
 		# just skip it from egrep options but show matches
