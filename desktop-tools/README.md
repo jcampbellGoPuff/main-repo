@@ -10,9 +10,7 @@ Here is a list of tools for the desktop. Unless otherwise noted, these tools are
 
 ---
 
-
-
-## srcfind
+## [srcfind](https://github.com/jcampbellGoPuff/jcampbellGoPuff/blob/main/desktop-tools/srcfind)
 
 * Type: CLI (zsh script)
 * Environment: MacOS
@@ -27,7 +25,7 @@ For example, searching through files to find an occurrence of the `lodash` funct
 
 As in this case, to find the instances of functionality in a source hierarchy, it is often necessary to search for occurrences of more than one term in any source file before it can be considered likely to contain the searched function.  `srcfind` does this for you.
 
-___
+---
 
 ### Example - why faceted search is tough with  standard UNIX commands
 
@@ -65,7 +63,7 @@ But the above has issues, beyond having to type a long command, typo-vulnerable 
 * The above command will break if file names have spaces.
 * You run some risk of exceeding the number of arguments allowed in a command if the `find` command returns too many path names.
 
-In this case, we have a file space in its name, 'test/test all.js', that contains `forEach`.  Because of the space, the above command would not work quite right. The expansion of the `find` command listed the file names with the spaces, but the shell would not treat that specially in the result.  This would mean that the outer `egrep` would not evaluate `./test/test all.js` as a single file. 
+In this case, we have a file space in its name, 'test/test all.js', that contains `forEach`.  Because of the space, the above command would not work quite right. The expansion of the `find` command listed the file names with the spaces, but the shell would not treat that specially in the result.  This would mean that the outer `egrep` would not evaluate `./test/test all.js` as a single file.
 
 ```
 ./src/array-utils.js 
@@ -75,7 +73,9 @@ all.js: No such file or directory
 ```
 
 If `test/test all.js` contained `iterate` as well as `forEach`, it would not have been included in the results.
-___
+
+---
+
 ### srcfind hides the complexity & avoids the issues
 
 `srcfind` provides a driver for `egrep` and `find` that will match the command above but eliminate the issues descibed above.  With `srcfind`, you need only the strings you seek.
