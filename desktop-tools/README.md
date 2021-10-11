@@ -4,11 +4,7 @@
 
 Here is a list of tools for the desktop. Unless otherwise noted, these tools are supported only on MacOS.
 
----
-
----
-
----
+----
 
 ## [srcfind](https://github.com/jcampbellGoPuff/jcampbellGoPuff/blob/main/desktop-tools/srcfind)
 
@@ -17,7 +13,7 @@ Here is a list of tools for the desktop. Unless otherwise noted, these tools are
 * Provided for: faceted search of source files in Node JS
 * Current version: 0.1 (alpha)
 
-### What it does
+### What it does: faceted command line search of multiple terms in a source hierarchy
 
 Developers often search through source files to find strings in an effort to locate functions.  However, a search for just one string often returns too many matches to be useful.  It can often be true that we need find source files that contain all of more than one string to pinpoint the function we are seeking.
 
@@ -78,8 +74,7 @@ If `test/test all.js` contained `iterate` as well as `forEach`, it would not hav
 
 ### srcfind hides the complexity & avoids the issues
 
-`srcfind` provides a driver for `egrep` and `find` that will match the command above but eliminate the issues descibed above.  With `srcfind`, you need only the strings you seek.
-
+`srcfind` provides a driver for `egrep` and `find` that will require you to enter only the strings you are seeking, as well as rid you of the issues noted above.
 ```
 srcfind forEach iterate
 
@@ -116,13 +111,13 @@ xargs -0 \
     iterate
 ```
 
-The extra arguments to `find` and `egrep` ignore typically uninteresting files that appear in Node.js projects. It also skips search of binary files, and uses NULL-delimiting in `xargs` and `egrep` to handle file names with spaces.
+The extra arguments to `find` and `egrep` ignore typically uninteresting files that appear in Node.js projects. It also skips binary files, and uses NULL-delimiting options in `xargs` and `egrep` to handle file names with spaces.
 
 ---
 
 ### Flexibility
 
-You can get `srcfind` to work more specifically for your needs. If you want to supply your own options to `egrep`, you can provide them after the search patterns. For example, to find the occurrences of `forEach`and`iterate`that are individual words, you can provide`-w`.  Add flags will have the added function of showing you the matches.
+You can get `srcfind` to work more specifically for your needs. If you want to supply your own options to `egrep`, you can provide them after the search patterns. For example, to find the occurrences of `forEach`and `iterate`that are individual words, you can provide `-w`.  Add flags will have the added function of showing you the matches.
 
 ```
 srcfind forEach iterate -w
