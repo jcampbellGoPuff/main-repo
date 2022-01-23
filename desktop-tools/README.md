@@ -1,6 +1,6 @@
 # Desktop tools
 
-*Last update: 10/11/2021*
+*Last update: 1/22/2022*
 
 Here is a list of tools for the desktop. Unless otherwise noted, these tools are supported only on MacOS.
 
@@ -11,7 +11,7 @@ Here is a list of tools for the desktop. Unless otherwise noted, these tools are
 * Type: CLI (zsh script)
 * Environment: MacOS
 * Provided for: faceted search of source files in Node JS
-* Current version: 0.1 (alpha)
+* Current version: 0.2 (alpha)
 
 ### What it does: faceted command line search of multiple terms in a source hierarchy
 
@@ -23,7 +23,7 @@ As in this case, to find the instances of functionality in a source hierarchy, i
 
 ---
 
-### Example - why faceted search is tough with  standard UNIX commands
+### Example - why faceted search is tough with standard UNIX commands
 
 Here is an example of files to search where the below lists the only lines they have that match `forEach` and `iterate`:
 
@@ -33,7 +33,7 @@ Here is an example of files to search where the below lists the only lines they 
 | src/array-utils.js | arr.forEach()                |
 |                    | // call forEach              |
 |                    | // iterates through array    |
-| app/search.js      | items.forEach(v=>v)          |
+| app/search.js      | items.forEach(v=> v)          |
 |                    | const iterate = (items) => { |
 | test/test all.js   | \_.forEach(item1)            |
 
@@ -54,7 +54,7 @@ If the above command works right, it will output both the files because they eac
 
 But the above has issues, beyond having to type a long command, typo-vulnerable command line:
 
-* You will search files you probably don't care about, such as hidden files and software installation folders (e.g., `node_modules`, `.github/**`, `.npmrc`).
+* You will search files you probably don't care about, such as hidden files and software installation folders (e.g., `node_modules`, `.github/**`).
 * The above will match binary files
 * The above command will break if file names have spaces.
 * You run some risk of exceeding the number of arguments allowed in a command if the `find` command returns too many path names.
@@ -117,21 +117,21 @@ The extra arguments to `find` and `egrep` ignore typically uninteresting files t
 
 ### Flexibility
 
-You can get `srcfind` to work more specifically for your needs. If you want to supply your own options to `egrep`, you can provide them after the search patterns. For example, to find the occurrences of `forEach`and `iterate`that are individual words, you can provide `-w`.  Add flags will have the added function of showing you the matches.
+You can get `srcfind` to work more specifically for your needs. If you want to supply your own options to `egrep`, you can provide them before the search patterns. For example, to list the files that contain the string `foreach` in any case and `iterate` as a whole word in only lowercase, you can provide the flags individually.
 
 ```
-srcfind forEach iterate -w
+srcfind -i foreach -w iterate
 
-# outputs only app/search.js, which contains 'iterate' and 'forEach' as words.
+# outputs only app/search.js, which contains 'iterate' and 'forEach'.
 # array-utils.js is not included because it contains no word-bound occurrence of 'iterate'
-./app/search.js:items.forEach(v=>v)
-./app/search.js:// const iterate = (items) => {
+./app/search.js
 ```
 
-If you want to see the matches without providing a flag to `egrep`, just add '--' to the command line:
+
+You may also see the matches by providing `-S` or `--show-matches` as the first argument.
 
 ```
-srcfind forEach iterate --
+srcfind -S iterate -i foreach
 
 # outputs
 ./src/array-utils.js:arr.forEach()

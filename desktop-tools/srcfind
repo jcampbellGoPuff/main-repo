@@ -1,70 +1,69 @@
 #!/bin/zsh
 
 # faceted search
+unset show
+if [[ "$1" == "-S" || "$1" == "--show-matches" ]]
+then
+	shift
+	show=1
+fi
 
 if [ $# -eq 0 ]
 then
-	echo >&2 "$0: at least one argument required"
+	echo >&2 "$0: at least one pattern required"
 	exit 1
 fi
 
-# find flags to egrep at end of argument list
-i=1
-flag_index=0
-while (( $i <= $# ))
-do
-	if [[ ${@[$i]} == -* ]]
-	then
-		flag_index=$i
-		break
-	fi
-	i=$((i+1))
-done
-
-declare -a egrep_options patterns
-if [[ $flag_index > 0 ]]
+if [[ ${@[$#]} == -* ]]
 then
-	if [[ $flag_index == 1 ]]
-	then
-		echo >&2 "$0: at least one argument required before flags to egrep"
-		exit 1
-	fi
-	if [[ $flag_index != $# || ${@[$#]} != "--" ]]
-	then
-		# if user put just a "-" at end of patterns
-		# just skip it from egrep options but show matches
-		egrep_options=(${@[$flag_index,-1]})
-	fi
-	patterns=(${@[1,(($flag_index-1))]})
+	echo >&2 "$0: last argument must be a pattern, not a flag"
+	exit 1
 fi
 
-function join_by()
+function extract_flags()
 {
-	delim=$1
+	local start=$1
 	shift
-	arr=($*)
-	result=$(IFS=$delim; echo "${arr[*]}")
-	echo "$result"
-	return 0
+	local v=("$@")
+	local next=$start
+
+	while [[ $next < ${#v[@]} ]]
+	do
+		if [[ "${v[@]:$next:1}" != -* ]]
+		then
+			break
+		fi
+		echo "${v[@]:$next:1}"
+		next=$((next + 1))
+	done
+
+	return $((next - count))
 }
 
+args=($@)
+arg_count=${#args[@]}
+
+arg_idx=0
+egrep_options=$(extract_flags $arg_idx ${args[@]})
+arg_idx=$?
+all_options=($egrep_options)
+
+pat="${args[@]:$arg_idx:1}"
+all_pats=("$pat")
 
 # Since egrep -l will produce a string of newline-delimited
 # file names, we restrict the input separator to *only*
 # a newline. With this setting + $(echo ...), we make a file 
 # list that is usable by egrep and any spaces in the file names
 # are preserved and processed correctly.
-
 IFS=$'\n'
 
-# get list of files from find
-# filtering out useless stuff that would appear in a Node/TS project.
 files=$(
 	find . \
 		-type d \( \
 			-name node_modules \
 			-o -name dist \
-			-o -name '.?*' \
+			-o -type d -name '.?*' \
 		\) \
 		-prune \
 		-o \
@@ -78,10 +77,10 @@ files=$(
 		-print0 |
 	xargs -0 \
 		egrep \
-			$egrep_options \
+			$(echo $egrep_options) \
 			--binary-files=without-match \
 			--files-with-matches \
-			"$1"
+			"$pat"
 )
 
 if [ $? -ne 0 ]
@@ -89,18 +88,20 @@ then
 	# egrep returned nothing - no results
 	exit 1
 fi
+arg_idx=$((arg_idx + 1))
 
 # Now iterate per pattern
-for ((i = 2; i <= $#; i++))
+while (( $arg_idx < $arg_count ))
 do
-		if (( $i == $flag_index ))
-		then
-			break
-		fi
-		pat="${@[$i]}"
+		egrep_options=$(extract_flags $arg_idx ${args[@]})
+		arg_idx=$?
+
+		all_options+=($egrep_options)
+		pat="${args[@]:$arg_idx:1}"
+		all_pats+=("$pat")
 		
 		files=$(egrep \
-			$egrep_options \
+			$(echo $egrep_options) \
 			--files-with-matches \
 			"$pat" \
 			$(echo $files))
@@ -110,16 +111,21 @@ do
 			# egrep returned nothing - no results
 			exit 1
 		fi
+		arg_idx=$((arg_idx + 1))
 done
 
-if [[ $flag_index > 0 ]]
+if [[ $show == 1 ]]
 then
-	expression=$(join_by '|' $patterns)
-	egrep \
-		-H \
-		$egrep_options \
-		"$expression" \
-		$(echo $files)
+	for (( i=0; i<${#all_pats[@]}; i++ ))
+	do
+		egrep_options=${all_options[@]:$i:1}
+		pat=${all_pats[@]:$i:1}
+		egrep \
+			-H \
+			$(echo $egrep_options) \
+			"$pat" \
+			$(echo $files)
+	done | sort | uniq
 else
 	echo $files
 fi
