@@ -1,11 +1,11 @@
 #!/bin/zsh
 
 # faceted search
-unset show
+show=0
 if [[ "$1" == "-S" || "$1" == "--show-matches" ]]
 then
-	shift
 	show=1
+	shift
 fi
 
 if [ $# -eq 0 ]
@@ -40,6 +40,37 @@ function extract_flags()
 	return $((next - count))
 }
 
+# TODO - fix to run with "show", for now, suppress
+function run_egrep()
+{
+	local pat=$1
+	local last=$2
+	local show=$3
+	shift 3
+	local opts="$@"
+	local zero_opt=""
+	# TODO - remove suppression
+	show=0
+	if (( $last == 0 ))
+	then
+		zero_opt=--null
+	fi
+	if (( $show == 1 )) 
+	then
+		file_opt=-H
+	else
+		file_opt=--files-with-matches
+	fi
+
+	xargs -0 egrep \
+		--binary-files=without-match \
+		$zero_opt \
+		$file_opt \
+		$(export IFS=$'\n'; echo $opts) \
+		"$pat"
+	return $?
+}
+
 args=($@)
 arg_count=${#args[@]}
 
@@ -49,21 +80,15 @@ arg_idx=$?
 all_options=($egrep_options)
 
 pat="${args[@]:$arg_idx:1}"
+# TODO - remove all_pats when show is supported
 all_pats=("$pat")
-
-# Since egrep -l will produce a string of newline-delimited
-# file names, we restrict the input separator to *only*
-# a newline. With this setting + $(echo ...), we make a file 
-# list that is usable by egrep and any spaces in the file names
-# are preserved and processed correctly.
-IFS=$'\n'
 
 files=$(
 	find . \
 		-type d \( \
 			-name node_modules \
 			-o -name dist \
-			-o -type d -name '.?*' \
+			-o -name '.?*' \
 		\) \
 		-prune \
 		-o \
@@ -75,12 +100,7 @@ files=$(
 			! -name '*.log' \
 		\) \
 		-print0 |
-	xargs -0 \
-		egrep \
-			$(echo $egrep_options) \
-			--binary-files=without-match \
-			--files-with-matches \
-			"$pat"
+		run_egrep "$pat" $((arg_idx == arg_count - 1)) $show $egrep_options
 )
 
 if [ $? -ne 0 ]
@@ -88,6 +108,7 @@ then
 	# egrep returned nothing - no results
 	exit 1
 fi
+
 arg_idx=$((arg_idx + 1))
 
 # Now iterate per pattern
@@ -100,11 +121,7 @@ do
 		pat="${args[@]:$arg_idx:1}"
 		all_pats+=("$pat")
 		
-		files=$(egrep \
-			$(echo $egrep_options) \
-			--files-with-matches \
-			"$pat" \
-			$(echo $files))
+		files=$(echo -n $files | run_egrep "$pat" $((arg_idx == arg_count - 1)) $show $egrep_options)
 
 		if [ $? -ne 0 ]
 		then
@@ -114,12 +131,15 @@ do
 		arg_idx=$((arg_idx + 1))
 done
 
+
+# TODO - remove this block when 'show' is supported in 'run_egrep'
 if [[ $show == 1 ]]
-then
+then 
+	egrep_options=${all_options[@]:$i:1}
+	pat=${all_pats[@]:$i:1}
+	export IFS=$'\n'
 	for (( i=0; i<${#all_pats[@]}; i++ ))
 	do
-		egrep_options=${all_options[@]:$i:1}
-		pat=${all_pats[@]:$i:1}
 		egrep \
 			-H \
 			$(echo $egrep_options) \
