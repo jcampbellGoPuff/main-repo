@@ -66,7 +66,7 @@ function run_egrep()
 		--binary-files=without-match \
 		$zero_opt \
 		$file_opt \
-		$(export IFS=$'\n'; echo $opts) \
+		$(echo $opts) \
 		"$pat"
 	return $?
 }
@@ -135,11 +135,11 @@ done
 # TODO - remove this block when 'show' is supported in 'run_egrep'
 if [[ $show == 1 ]]
 then 
-	egrep_options=${all_options[@]:$i:1}
-	pat=${all_pats[@]:$i:1}
 	export IFS=$'\n'
 	for (( i=0; i<${#all_pats[@]}; i++ ))
 	do
+		pat=${all_pats[@]:$i:1}
+		egrep_options=${all_options[@]:$i:1}
 		egrep \
 			-H \
 			$(echo $egrep_options) \
