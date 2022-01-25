@@ -1,0 +1,67 @@
+#!/bin/zsh
+
+function prep() {
+	mkdir -p test_bed
+	(cd test_base ; cp -r . ../test_bed)
+	alias prog=../../../srcfind
+}
+
+FAIL_CNT=0
+
+function join_by()
+{
+	 delim=$1
+	 shift
+	 arr=($*)
+	 result=$(IFS=$delim; echo "${arr[*]}")
+	 echo "$result"
+	 return 0
+}
+
+function run_test()
+{
+	desc="$1"
+	expected_status=$2
+	expected="$3"
+	shift 3
+	rc=0
+	
+	raw=$(prog "$@" 2>/dev/null)
+	st=$?
+	if [ $st -ne $expected_status ]
+	then
+		echo "$desc: FAIL - expected exit status $expected_status, got $st"
+		rc=1
+	elif [ $st -ne 0 ]
+	then
+			echo "$desc": OK
+	else
+		actual=$(join_by ,  $(echo $raw | sort))
+		if [ "$actual" = "$expected" ]
+		then
+			echo "$desc": OK
+		else
+			echo "$desc": 'FAIL - expected "'"$expected"'", got "'"$actual"'"'
+			rc=1
+		fi
+	fi
+	FAIL_CNT=$((FAIL_CNT+!!rc))
+	return $rc
+}
+
+prep
+
+cd test_bed
+
+run_test "Usage - no arguments (error)" 1 "" 
+run_test "Usage - end with flag (error)" 1 -S 
+
+run_test "Basic - 1 string, no matches (1 exit status)" 1 "" NOTHING
+run_test "Basic - 1 string, 1 file" 0 "./01.txt" hello
+run_test "Basic - 1 string, >1 file" 0 "./01.txt,./02.txt" case
+run_test "Basic - 1 string, 1 file (case-sensitive default)" 0 "./02.txt" Case
+run_test "Basic - 1 string, >1 file (case-insensitive match with flag)" 0 "./01.txt,./02.txt" -i Case
+
+run_test "Simple - 2 strings in 1 file, separate lines" 0 "./01.txt" lower case
+
+echo "Tests complete. Error count = $FAIL_CNT"
