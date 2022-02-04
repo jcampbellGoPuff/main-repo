@@ -13,7 +13,7 @@ Here is a list of tools for the desktop. Unless otherwise noted, these tools are
 * Provided for: faceted search of source files in Node JS
 * Current version: 0.2 (alpha)
 
-### What it does: faceted command line search of multiple terms in a source hierarchy
+### Description: faceted command line search of multiple terms in a source hierarchy
 
 Developers often search through source files to find strings in an effort to locate functions.  However, a search for just one string often returns too many matches to be useful.  It can often be true that we need find source files that contain all of more than one string to pinpoint the function we are seeking.
 
@@ -88,8 +88,8 @@ In the above case, `srcfind` will run the equivalent of:
 ```
 find . \ 
     -type d '(' \
-      -name node_modules \
-      -o -name dist -o \
+      -name node_modules -o \
+      -name dist -o \
       -name '.?*' \
     ')' -prune \
   -o '(' \
