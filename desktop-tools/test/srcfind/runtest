@@ -3,20 +3,9 @@
 function prep() {
 	mkdir -p test_bed
 	(cd test_base ; cp -r . ../test_bed)
-	alias prog=../../../srcfind
 }
 
 FAIL_CNT=0
-
-function join_by()
-{
-	 delim=$1
-	 shift
-	 arr=($*)
-	 result=$(IFS=$delim; echo "${arr[*]}")
-	 echo "$result"
-	 return 0
-}
 
 function run_test()
 {
@@ -26,7 +15,7 @@ function run_test()
 	shift 3
 	rc=0
 	
-	raw=$(prog "$@" 2>/dev/null)
+	actual="$(../../../srcfind "$@" 2>/dev/null)"
 	st=$?
 	if [ $st -ne $expected_status ]
 	then
@@ -36,8 +25,9 @@ function run_test()
 	then
 			echo "$desc": OK
 	else
-		actual=$(join_by ,  $(echo $raw | sort))
-		if [ "$actual" = "$expected" ]
+		actual_fmt=$(echo "$actual" | sort)
+		expected_fmt=$(echo "$expected")
+		if [ "$actual_fmt" = "$expected_fmt" ]
 		then
 			echo "$desc": OK
 		else
@@ -58,10 +48,10 @@ run_test "Usage - end with flag (error)" 1 -S
 
 run_test "Basic - 1 string, no matches (1 exit status)" 1 "" NOTHING
 run_test "Basic - 1 string, 1 file" 0 "./01.txt" hello
-run_test "Basic - 1 string, >1 file" 0 "./01.txt,./02.txt" case
+run_test "Basic - 1 string, >1 file" 0 "./01.txt\n./02.txt" case
 run_test "Basic - 1 string, 1 file (case-sensitive default)" 0 "./02.txt" Case
-run_test "Basic - 1 string, >1 file (case-insensitive match with flag)" 0 "./01.txt,./02.txt" -i Case
-run_test "Basic - 1 string, 1 file, show matches" 0 "./01.txt:Hello,MIXED,CASE" -S MIXED
+run_test "Basic - 1 string, >1 file (case-insensitive match with flag)" 0 "./01.txt\n./02.txt" -i Case
+run_test "Basic - 1 string, 1 file, show matches" 0 "./01.txt:Hello MIXED CASE" -S MIXED
 
 run_test "Simple - 2 strings in 1 file, separate lines" 0 "./01.txt" lower case
 
