@@ -61,6 +61,7 @@ run_test "Basic - 1 string, 1 file" 0 "./01.txt" hello
 run_test "Basic - 1 string, >1 file" 0 "./01.txt,./02.txt" case
 run_test "Basic - 1 string, 1 file (case-sensitive default)" 0 "./02.txt" Case
 run_test "Basic - 1 string, >1 file (case-insensitive match with flag)" 0 "./01.txt,./02.txt" -i Case
+run_test "Basic - 1 string, 1 file, show matches" 0 "./01.txt:Hello,MIXED,CASE" -S MIXED
 
 run_test "Simple - 2 strings in 1 file, separate lines" 0 "./01.txt" lower case
 
