@@ -54,5 +54,6 @@ run_test "Basic - 1 string, >1 file (case-insensitive match with flag)" 0 "./01.
 run_test "Basic - 1 string, 1 file, show matches" 0 "./01.txt:Hello MIXED CASE" -S MIXED
 
 run_test "Simple - 2 strings in 1 file, separate lines" 0 "./01.txt" lower case
+run_test "Simple - filename with spaces" 0 "./a b c.txt" spacey
 
 echo "Tests complete. Error count = $FAIL_CNT"
