@@ -1,6 +1,6 @@
 # Desktop tools
 
-*Last update: 1/22/2022*
+*Last update: 3/15/2022*
 
 Here is a list of tools for the desktop. Unless otherwise noted, these tools are supported only on MacOS.
 
@@ -11,7 +11,7 @@ Here is a list of tools for the desktop. Unless otherwise noted, these tools are
 * Type: CLI (zsh script)
 * Environment: MacOS
 * Provided for: faceted search of source files in Node JS
-* Current version: 0.2 (alpha)
+* Current version: 0.3 (alpha)
 
 ### Description: faceted command line search of multiple terms in a source hierarchy
 

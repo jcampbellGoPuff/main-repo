@@ -14,7 +14,7 @@ then
 	exit 1
 fi
 
-if [[ ${@[$#]} == -* ]]
+if [[ "${@[$#]}" == -* ]]
 then
 	echo >&2 "$0: last argument must be a pattern, not a flag"
 	exit 1
@@ -37,20 +37,17 @@ function extract_flags()
 		next=$((next + 1))
 	done
 
-	return $((next - count))
+	return $next
 }
 
-# TODO - fix to run with "show", for now, suppress
-function run_egrep()
+function gen_egrep()
 {
-	local pat=$1
-	local last=$2
-	local show=$3
+	local pat="$1"
+	local last="$2"
+	local show="$3"
 	shift 3
 	local opts="$@"
 	local zero_opt=""
-	# TODO - remove suppression
-	show=0
 	if (( $last == 0 ))
 	then
 		zero_opt=--null
@@ -62,91 +59,52 @@ function run_egrep()
 		file_opt=--files-with-matches
 	fi
 
-	xargs -0 egrep \
-		--binary-files=without-match \
-		$zero_opt \
-		$file_opt \
-		$(echo $opts) \
-		"$pat"
-	return $?
+	echo \
+		xargs -0 egrep \
+			--binary-files=without-match \
+			$zero_opt \
+			$file_opt \
+			$opts \
+			"'$pat'"
+	return 0
 }
 
 args=($@)
 arg_count=${#args[@]}
 
-arg_idx=0
-egrep_options=$(extract_flags $arg_idx ${args[@]})
-arg_idx=$?
-all_options=($egrep_options)
-
 pat="${args[@]:$arg_idx:1}"
-# TODO - remove all_pats when show is supported
-all_pats=("$pat")
+base_command="find . \
+	-type d \( \
+		-name node_modules \
+		-o -name dist \
+		-o -name '.?*' \
+	\) \
+	-prune \
+	-o \
+	\( \
+		-type f \
+		! -name '.*' \
+		! -name 'package-lock.json' \
+		! -name 'yarn.lock' \
+		! -name '*.log' \
+	\) \
+	-print0"
 
-files=$(
-	find . \
-		-type d \( \
-			-name node_modules \
-			-o -name dist \
-			-o -name '.?*' \
-		\) \
-		-prune \
-		-o \
-		\( \
-			-type f \
-			! -name '.*' \
-			! -name 'package-lock.json' \
-			! -name 'yarn.lock' \
-			! -name '*.log' \
-		\) \
-		-print0 |
-		run_egrep "$pat" $((arg_idx == arg_count - 1)) $show $egrep_options
-)
+command="$base_command"
 
-if [ $? -ne 0 ]
-then
-	# egrep returned nothing - no results
-	exit 1
-fi
-
-arg_idx=$((arg_idx + 1))
-
-# Now iterate per pattern
+# Now construct command line by iterating per pattern
+arg_idx=0
 while (( $arg_idx < $arg_count ))
 do
 		egrep_options=$(extract_flags $arg_idx ${args[@]})
 		arg_idx=$?
 
-		all_options+=($egrep_options)
 		pat="${args[@]:$arg_idx:1}"
-		all_pats+=("$pat")
 		
-		files=$(echo -n $files | run_egrep "$pat" $((arg_idx == arg_count - 1)) $show $egrep_options)
-
-		if [ $? -ne 0 ]
-		then
-			# egrep returned nothing - no results
-			exit 1
-		fi
+		command="${command} | "$(gen_egrep "$pat" $((arg_idx == arg_count - 1)) $show $egrep_options)
 		arg_idx=$((arg_idx + 1))
 done
 
-
-# TODO - remove this block when 'show' is supported in 'run_egrep'
-if [[ $show == 1 ]]
-then 
-	export IFS=$'\n'
-	for (( i=0; i<${#all_pats[@]}; i++ ))
-	do
-		pat=${all_pats[@]:$i:1}
-		egrep_options=${all_options[@]:$i:1}
-		egrep \
-			-H \
-			$(echo $egrep_options) \
-			"$pat" \
-			$(echo $files)
-	done | sort | uniq
-else
-	echo $files
-fi
-exit 0
+#echo >&2 $command
+eval "$command"
+exit $?
