@@ -43,7 +43,7 @@ function extract_flags()
 function gen_egrep()
 {
 	local pat="$1"
-	local last="$2"
+	local last=$2
 	local show="$3"
 	shift 3
 	local opts="$@"
@@ -52,7 +52,8 @@ function gen_egrep()
 	then
 		zero_opt=--null
 	fi
-	if (( $show == 1 )) 
+	# Remove consideration of "last" when Issue 2 is fixed
+	if (( $last == 1 && $show == 1 )) 
 	then
 		file_opt=-H
 	else
