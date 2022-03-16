@@ -1,0 +1,6 @@
+# Vim / vi /ex
+.*.swp
+
+# Tests
+test/**/test_bed
+
