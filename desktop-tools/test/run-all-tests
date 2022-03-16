@@ -1,0 +1,4 @@
+#!/bin/zsh
+cd srcfind
+chmod +x runtest 2>/dev/null
+runtest
