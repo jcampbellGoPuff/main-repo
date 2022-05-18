@@ -145,10 +145,9 @@ else
 		arg_idx=$?
 
 		pat="${args[@]:$arg_idx:1}"
-		is_first=$((arg_idx == 0))
 		
 		#echo >&2 "$(gen_egrep "$pat" $is_first 1 1 $egrep_options) < $match_data_file"
-		eval "$(gen_egrep "$pat" $is_first 1 1 $egrep_options) < $match_data_file"
+		eval "$(gen_egrep "$pat" 0 1 1 $egrep_options) < $match_data_file"
 		
 		arg_idx=$((arg_idx + 1))
 	done
