@@ -81,22 +81,8 @@ args=($@)
 arg_count=${#args[@]}
 
 pat="${args[@]:$arg_idx:1}"
-base_command="find . \
-	-type d \( \
-		-name node_modules \
-		-o -name dist \
-		-o -name '.?*' \
-	\) \
-	-prune \
-	-o \
-	\( \
-		-type f \
-		! -name '.*' \
-		! -name 'package-lock.json' \
-		! -name 'yarn.lock' \
-		! -name '*.log' \
-	\) \
-	-print0"
+
+base_command="git ls-files -z"
 
 command="$base_command"
 
