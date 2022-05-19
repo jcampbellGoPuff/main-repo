@@ -1,6 +1,6 @@
 # Desktop tools
 
-*Last update: 3/15/2022*
+*Last update: 5/19/2022*
 
 Here is a list of tools for the desktop. Unless otherwise noted, these tools are supported only on MacOS.
 
@@ -10,8 +10,8 @@ Here is a list of tools for the desktop. Unless otherwise noted, these tools are
 
 * Type: CLI (zsh script)
 * Environment: MacOS
-* Provided for: faceted search of source files in Node JS
-* Current version: 0.3 (alpha)
+* Provided for: faceted search of source files in Github project
+* Current version: 0.4 (alpha)
 
 ### Description: faceted command line search of multiple terms in a source hierarchy
 
@@ -54,7 +54,7 @@ If the above command works right, it will output both the files because they eac
 
 But the above has issues, beyond having to type a long command, typo-vulnerable command line:
 
-* You will search files you probably don't care about, such as hidden files and software installation folders (e.g., `node_modules`, `.github/**`).
+* You will search files you probably don't care about, such as hidden files and software installation folders
 * The above will match binary files
 * The above command will break if file names have spaces.
 * You run some risk of exceeding the number of arguments allowed in a command if the `find` command returns too many path names.
@@ -86,19 +86,7 @@ srcfind forEach iterate
 In the above case, `srcfind` will run the equivalent of:
 
 ```
-find . \ 
-    -type d '(' \
-      -name node_modules -o \
-      -name dist -o \
-      -name '.?*' \
-    ')' -prune \
-  -o '(' \
-  -type f \
-    ! -name '.*' \
-    ! -name package-lock.json \
-    ! -name yarn.lock \
-    ! -name '*.log' \
-  ')' -print0 |
+git ls-files -z \
 xargs -0 \
   egrep \
     --binary-files=without-match \
@@ -156,4 +144,4 @@ Because this script delegates its matching to `egrep`, the `egrep`-style of regu
 
 ### Caveats
 
-Right now, `srcfind` is specialized to Node projects and has other limitations.  I will make updates to support more use cases as I go along.
+Right now, `srcfind` is specialized to Github projects and has other limitations.  I will make updates to support more use cases as I go along.
