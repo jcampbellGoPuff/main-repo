@@ -33,7 +33,7 @@ function extract_flags()
 		then
 			break
 		fi
-		echo "${v[@]:$next:1}"
+		printf "%s\n" "${v[@]:$next:1}"
 		next=$((next + 1))
 	done
 
