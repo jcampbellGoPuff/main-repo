@@ -51,20 +51,21 @@ You can search the files that contain occurrences of both string using a fairly 
 egrep -l $(find . -type f -print | egrep -l forEach) iterate
 ```
 
-If the above command works right, it will output both the files because they each contain both strings:
+If the above command works right, we would expect to see all the files because they contain both strings:
 
 ```
 ./src/array-utils.js
 ./app/search.js
+./app/test all.js
 ```
 
-But the above has issues, beyond having to type a long, typo-vulnerable command line:
+However, this will not work nearly as well as we might expect.  Here are a few things that can go wrong:
 
 - You will search files you probably don't care about, such as hidden files and software installation folders
 - You will match binary files, which is usually not the intent
 - The expansion of the `find` command might provide too many file names, which will cause the command line to fail.
 
-Even without these problems, the above command is guaranteed to break because one of the file names returned would be `./test all.js`, which contains a space.  The pieces separated by the spaces would be processed as individual file names, which is clearly not correct.  You would get this result:
+Even if the above example were attempted in a directory without a lot of data, it is still guaranteed to break because one of the file names returned would be `./test all.js`, which contains a space.  The pieces separated by the spaces would be processed as individual file names, which is clearly not correct.  You would get this result:
 
 ```
 ./src/array-utils.js
@@ -73,7 +74,7 @@ Even without these problems, the above command is guaranteed to break because on
 all.js: No such file or directory
 ```
 
-`srcfind` provides a driver for `egrep` and `find` that will require you to enter only the strings you are looking for, without any complications from the above issues.
+These problems and others can easily get in the way of the simple and commonplace task of searching files for multiple strings.
 
 ---
 
@@ -103,7 +104,7 @@ xargs -0 \
 
 This means the file names will be searched only when they are recognized by `git`, when they are not binary (i.e., non-textual) files. The NULL-delimiting options in `git ls-files`, `xargs` and `egrep` will be used to handle file names that contain spaces.
 
-The result will then be correct:
+The result will then be correct, matching what was attempted in the previous section.
 
 ```
 src/array-utils.js
