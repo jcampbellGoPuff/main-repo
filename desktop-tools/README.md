@@ -1,6 +1,6 @@
 # Desktop tools
 
-_Last update: 5/19/2022_
+_Last update: 7/7/2022_
 
 Here is a list of tools for the desktop. Unless otherwise noted, these tools are supported only on MacOS.
 
@@ -35,12 +35,13 @@ Here is an example of files to search and some places within them that hold the 
 
 | Name               | Contains                     |
 | :----------------- | ---------------------------- |
-| src/array-utils.js | arr.forEach()                |
-|                    | // call forEach              |
-|                    | // iterates through array    |
-| app/search.js      | items.forEach(v=> v)         |
-|                    | const iterate = (items) => { |
-| test/test all.js   | \_.forEach(item1)            |
+| `src/array-utils.js` | `arr.forEach()`              |
+|                    | `// call forEach`              |
+|                    | `// iterates through array`    |
+| `app/search.js`      | `items.forEach(v=> v)`         |
+|                    | `const iterate = (items) => {` |
+| `test/test all.js`   | `_.forEach(item1)`            |
+|                      | `// iterate over this array`  |
 
 You can search the files that contain occurrences of both string using a fairly simple UNIX command line:
 
@@ -60,11 +61,10 @@ If the above command works right, it will output both the files because they eac
 But the above has issues, beyond having to type a long, typo-vulnerable command line:
 
 - You will search files you probably don't care about, such as hidden files and software installation folders
-- The above will match binary files
-- The above command will break if file names have spaces.
-- You run some risk of exceeding the number of arguments allowed in a command if the `find` command returns too many path names.
+- You will match binary files, which is usually not the intent
+- The expansion of the `find` command might provide too many file names, which will cause the command line to fail.
 
-For the reasons noted above, the above `egrep` command would not work quite right. The subcommand in `$(...)` would list `test/test all.js` as it should, but the pieces of the file path would be treated as separate arguments to `egrep`. Here is the result you would see:
+Even without these problems, the above command is guaranteed to break because one of the file names returned would be `./test all.js`, which contains a space.  The pieces separated by the spaces would be processed as individual file names, which is clearly not correct.  You would get this result:
 
 ```
 ./src/array-utils.js
@@ -73,23 +73,19 @@ For the reasons noted above, the above `egrep` command would not work quite righ
 all.js: No such file or directory
 ```
 
-If `test/test all.js` contained `iterate` as well as `forEach`, it would not be included in the results.
+`srcfind` provides a driver for `egrep` and `find` that will require you to enter only the strings you are looking for, without any complications from the above issues.
 
 ---
 
 ### srcfind hides the complexity & avoids the issues
 
-`srcfind` provides a driver for `egrep` and `find` that will require you to enter only the strings you are seeking, as well as rid you of the issues noted above.
+Now let's try the above search with `srcfind`
 
 ```
 srcfind forEach iterate
-
-# outputs same as above, with no errors on "test/test all.js"
-./src/array-utils.js
-./app/search.js
 ```
 
-In the above case, `srcfind` will run the equivalent of:
+In the above, `srcfind` will run the equivalent of:
 
 ```
 git ls-files -z \
@@ -105,45 +101,45 @@ xargs -0 \
     iterate
 ```
 
-This means the file names will be searched only when they are recognized by `git`, when they are not binary (i.e., non-textual) files, and the NULL-delimiting options in `git ls-files`, `xargs` and `egrep` will be provided to handle file names that contain spaces.
+This means the file names will be searched only when they are recognized by `git`, when they are not binary (i.e., non-textual) files. The NULL-delimiting options in `git ls-files`, `xargs` and `egrep` will be used to handle file names that contain spaces.
+
+The result will then be correct:
+
+```
+src/array-utils.js
+app/search.js
+test/test all.js
+```
 
 ---
 
 ### Flexibility
 
-You can get `srcfind` to work more specifically for your needs. If you want to supply your own options to `egrep`, you can provide them before the search patterns. For example, to list the files that contain the string `foreach` in any case and `iterate` as a whole word in only lowercase, you can provide the flags individually.
+Because this script delegates its matching to `egrep`, the `egrep`-style of regular expression syntax is fully supported. All the flags to that program are generally supported as well and can be provided with each pattern separately. For example, to list the files that contain the string `foreach` in any mix of lowercase or uppercase characters that also include `iterate` as a whole word in only lowercase, you can provide flags to specialize each match separately.
 
 ```
 srcfind -i foreach -w iterate
-
-# outputs only app/search.js, which contains 'iterate' and 'forEach'.
-# array-utils.js is not included because it contains no word-bound occurrence of 'iterate'
-./app/search.js
+```
+The results will exclude `src/array-utils.js`, because it does not contain `iterate` as a word:
+```
+app/search.js
+test/test all.js
 ```
 
-You may also see the matches by providing `-S` or `--show-matches` as the first argument.
+`srcfind` will also allow you to see the matches, rather than just the file names that match. To do this, provide `-S` or `--show-matches` as the first argument.
 
 ```
 srcfind -S iterate -i foreach
 
 # outputs
-./src/array-utils.js:arr.forEach()
-./src/array-utils.js:// call forEach
-./src/array-utils.js:// iterates through array
-./app/search.js:items.forEach(v=>v)
-./app/search.js:// const iterate = (items) => {
+src/array-utils.js:arr.forEach()
+src/array-utils.js:// call forEach
+src/array-utils.js:// iterates through array
+app/search.js:items.forEach(v=>v)
+app/search.js:// const iterate = (items) => {
+test/test all.js:_.forEach(item1)
+test/test all.js:// iterate over this array
 ```
-
-If you want to provide flags without seeing the matches, just add '-l'.
-
-```
-srcfind forEach iterate -w -l
-
-# outputs
-./app/search.js
-```
-
-Because this script delegates its matching to `egrep`, the `egrep`-style of regular expression syntax is fully supported. All the flags to that program are generally supported as well.
 
 ---
 
