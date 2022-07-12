@@ -1,6 +1,8 @@
 #!/bin/zsh
 
-# faceted search
+# this utility searches text files under the current directory
+# that each contain occurrences of multiple strings
+
 show=0
 if [[ "$1" == "-S" || "$1" == "--show-matches" ]]
 then
