@@ -79,24 +79,22 @@ function gen_egrep()
   return 0
 }
 
-args=($@)
-arg_count=${#args[@]}
-
-pat="${args[@]:$arg_idx:1}"
-
 base_command="git ls-files -z"
 
 command="$base_command"
 
 # Now construct command line by iterating per pattern
 arg_idx=0
+args=($@)
+pat="${args[@]:$arg_idx:1}"
+arg_count=${#args[@]}
+
 while (( $arg_idx < $arg_count ))
 do
     egrep_options=$(extract_flags $arg_idx ${args[@]})
     arg_idx=$?
 
     pat="${args[@]:$arg_idx:1}"
-
 
     show_arg=0
     is_last=$((arg_idx == arg_count - 1))
