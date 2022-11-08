@@ -82,7 +82,7 @@ function gen_egrep()
 # Take action based on whether we are in a directory under "git"
 if git -C . rev-parse 2>/dev/null
 then
-	command="git ls-files -z"
+	command="git ls-files -z ."
 else
 	# Do not include hidden directories
 	command="find . \( -type d -name '.*' ! -name . -prune \) -o -type f -print0"
