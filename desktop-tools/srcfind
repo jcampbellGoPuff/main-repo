@@ -28,6 +28,7 @@ function extract_flags()
   shift
   local v=("$@")
   local next=$start
+	local sp
 
   while [[ $next < ${#v[@]} ]]
   do
@@ -35,8 +36,9 @@ function extract_flags()
     then
       break
     fi
-    printf "%s\n" "${v[@]:$next:1}"
+    printf "%s%s" "$sp" "${v[@]:$next:1}"
     next=$((next + 1))
+    sp=" "
   done
 
   return $next
@@ -82,10 +84,10 @@ function gen_egrep()
 # Take action based on whether we are in a directory under "git"
 if git -C . rev-parse 2>/dev/null
 then
-	command="git ls-files -z ."
+  command="git ls-files -z ."
 else
-	# Do not include hidden directories
-	command="find . \( -type d -name '.*' ! -name . -prune \) -o -type f -print0"
+  # Do not include hidden directories
+  command="find . \( -type d -name '.*' ! -name . -prune \) -o -type f -print0"
 fi
 
 # Now construct command line by iterating per pattern
