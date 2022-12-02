@@ -1,6 +1,6 @@
 # Desktop tools
 
-_Last update: 7/7/2022_
+_Last update: 12/2/2022_
 
 Here is a list of tools for the desktop. Unless otherwise noted, these tools are supported only on MacOS.
 
@@ -15,17 +15,17 @@ Here is a list of tools for the desktop. Unless otherwise noted, these tools are
 
 ### Description: faceted command line search of multiple terms in a source hierarchy
 
-Developers often search through source files to find strings in an effort to locate functions. However, a search for just one string often returns too many matches to be useful. It can often be true that we need find source files that contain all of more than one string to pinpoint the function we are seeking.
+Developers often search through source files to find strings in an effort to locate functions. However, a search for just one string often returns too many matches to be useful. It can often be true that we need find source files that contain all of more than one string to pinpoint the subject we are seeking.
 
-For example, suppose you were working in Node JS and wanted to find uses of the `lodash` function `reduce`. A search for just `lodash` would probably return a lot of files. The same would be true if you searched for `reduce`. The natural way to deal with this is to make the search more specific, such as by searching for `lodash.reduce` or `_.reduce`. However, you cannot be sure that this would find all the occurrences you want to change. As an example, it is possible that the the function `reduce` was imported from the `lodash` module individually, such as with this code:
+For example, suppose you were working in Node JS and wanted to find uses of the `lodash` function `reduce`. A search for just `lodash` would probably return a lot of files. The same would be true if you searched for `reduce`. The natural way to deal with this is to make the search more specific, such as by searching for `lodash.reduce` or `_.reduce`. However, you cannot be sure that this would find all the occurrences you want to change. For example, it is possible that the the function `reduce` was imported from the `lodash` module individually, such as with this code:
 
 ```
 const { reduce } = require('lodash')
+...
+const obj = reduce(otherObj)
 ```
 
-which allows the developer to call only `reduce` without any prefix.
-
-A more reliable way to find all potential occurrences is to first find all the files that contain `lodash`, and then, from only those files, search for the word `reduce`. Although IDE's provide this functionality by allowing users to search open files, it is convenient to be able to do this search on a command line. That is what `srcfind` provides.
+In this situation, results would likely be better by finding all the files that contain `lodash` and then search for the word `reduce` from only those files. Although IDE's provide this functionality by allowing users to search open files, it is convenient to be able to do this search on a command line. That is what `srcfind` provides.
 
 ---
 
@@ -51,7 +51,7 @@ You can search the files that contain occurrences of both string using a fairly 
 egrep -l $(find . -type f -print | egrep -l forEach) iterate
 ```
 
-If the above command works right, we would expect to see all the files because they contain both strings:
+We would expect to see all the files as follows because they contain both strings:
 
 ```
 ./src/array-utils.js
@@ -59,14 +59,7 @@ If the above command works right, we would expect to see all the files because t
 ./app/test all.js
 ```
 
-However, this will not work nearly as well as we might expect.  Here are a few things that can go wrong:
-
-- You will search files you probably don't care about, such as hidden files and software installation folders
-- You will match binary files, which is usually not the intent
-- The expansion of the `find` command might provide too many file names, which will cause the command line to fail.
-
-Even if the above example were attempted in a directory without a lot of data, it is still guaranteed to break because one of the file names returned would be `./test all.js`, which contains a space.  The pieces separated by the spaces would be processed as individual file names, which is clearly not correct.  You would get this result:
-
+However, that won't be so.  You would instead see: 
 ```
 ./src/array-utils.js
 ./app/search.js
@@ -74,7 +67,14 @@ Even if the above example were attempted in a directory without a lot of data, i
 all.js: No such file or directory
 ```
 
-These problems and others can easily get in the way of the simple and commonplace task of searching files for multiple strings.
+Although the `find...egrep` subcommand correctly listed all the files that contained `forEach`, the space in the file name `test all.js` caused the shell to provide './test/test' and 'all.js' to the outer `egrep` command as separate arguments.  Although you could use quoting and more complex command evaluation to avoid this particular issue, the task becomes a lot harder.  Plus, there are more issues that will likely get in the way:
+
+- You will search files you probably don't care about, such as hidden files and software installation folders (e.g., `node_modules`)
+- You will match binary files, which is usually not the intent
+- The expansion of the `find...egrep` command might provide so many file names that the command line to fail.
+
+
+Because of the simple and commonplace need to search files with multiple strings without having to overcome these problems every time, I wrote `srcfind`.
 
 ---
 
@@ -102,9 +102,9 @@ xargs -0 \
     iterate
 ```
 
-This means the file names will be searched only when they are recognized by `git`, when they are not binary (i.e., non-textual) files. The NULL-delimiting options in `git ls-files`, `xargs` and `egrep` will be used to handle file names that contain spaces.
+This means the only files that will be searched are non-binary files tracked recognized by `git`, and the NULL-delimiting options in `git ls-files`, `xargs` and `egrep` will be used to handle file names that contain spaces.
 
-The result will then be correct, matching what was attempted in the previous section.
+The result will then be correct, fixing the problem described in the previous section.
 
 ```
 src/array-utils.js
@@ -116,7 +116,7 @@ test/test all.js
 
 ### Flexibility
 
-Because this script delegates its matching to `egrep`, the `egrep`-style of regular expression syntax is fully supported. All the flags to that program are generally supported as well and can be provided with each pattern separately. For example, to list the files that contain the string `foreach` in any mix of lowercase or uppercase characters that also include `iterate` as a whole word in only lowercase, you can provide flags to specialize each match separately.
+Because this script delegates its matching to `egrep`, the `egrep`-style of regular expression syntax is fully supported and need only be quoted normally.  I also support per-pattern flags. For example, to list the files that contain the string `foreach` in any mix of lowercase or uppercase characters that also include `iterate` as a whole word in only lowercase, you can provide flags to specialize each match separately.
 
 ```
 srcfind -i foreach -w iterate
