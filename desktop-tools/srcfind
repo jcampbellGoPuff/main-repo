@@ -28,7 +28,7 @@ function extract_flags()
   shift
   local v=("$@")
   local next=$start
-	local sp
+  local sp
 
   while [[ $next < ${#v[@]} ]]
   do
