@@ -59,7 +59,7 @@ We would expect to see all the files as follows because they contain both string
 ./app/test all.js
 ```
 
-However, that won't be so.  You would instead see: 
+However, that won't be so.  You would instead see a partial result, and error messages that are hard to interpret: 
 ```
 ./src/array-utils.js
 ./app/search.js
@@ -67,12 +67,14 @@ However, that won't be so.  You would instead see:
 all.js: No such file or directory
 ```
 
-Although the `find...egrep` subcommand correctly listed all the files that contained `forEach`, the space in the file name `test all.js` caused the shell to provide './test/test' and 'all.js' to the outer `egrep` command as separate arguments.  Although you could use quoting and more complex command evaluation to avoid this particular issue, the task becomes a lot harder.  Plus, there are more issues that will likely get in the way:
+Although the `find...egrep` subcommand correctly listed all the files that contained `forEach`, the space in the file name `test all.js` caused the shell to provide `./test/test` and `all.js` to the outer `egrep` command as separate file arguments, which cannot work.
 
-- You will search files you probably don't care about, such as hidden files and software installation folders (e.g., `node_modules`)
-- You will match binary files, which is usually not the intent
-- The expansion of the `find...egrep` command might provide so many file names that the command line to fail.
+While it is possible to apply quoting and such to avoid issues like that, the simple task of searching multiple files for multiple strings will get much more challenging, especially when you want to search more than two strings, or when you have to search through a large, diverse hierarchy of files, as most software projects often are.  Here are a few:
 
+- Shell expansion syntax shown above won't work easily with multiple levels of expansion, which means three or more strings is hard to search at once
+- You will search files and directories you probably don't care about, such as `.git`, git-ignored files, or software installation folders (e.g., `node_modules`)
+- `egrep` will (by default) open and match non-textual files, which is usually not useful and will slow the search down unnecessarily
+- The expansion of the `find...egrep` command might provide so many file names that the shell command line will hit system limits and fail
 
 Because of the simple and commonplace need to search files with multiple strings without having to overcome these problems every time, I wrote `srcfind`.
 
